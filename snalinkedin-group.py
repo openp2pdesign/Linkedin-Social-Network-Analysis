@@ -52,6 +52,8 @@ print "Go to the following link in your browser:"
 print "%s?oauth_token=%s" % (authorize_url, request_token['oauth_token'])
 print 
 
+# Try with commenting this section
+'''
 accepted = 'n'
 while accepted.lower() == 'n':
     accepted = raw_input('Have you authorized me? (y/n) ')
@@ -71,11 +73,11 @@ print "    - oauth_token_secret = %s" % access_token['oauth_token_secret']
 print
 print "You may now access protected resources using the access tokens above."
 print
-
+'''
 # Here start my code
 
 # Get info about the FabLab Interest Group group
-request_url = 'http://api.linkedin.com/v1/groups/89815:(id,name,site-group-url,posts:(id,summary,creator))'
+request_url = 'http://api.linkedin.com/v1/groups/89815:(id,name,site-group-url,posts:(id,summary,creator))?format=json'
 group = client.request(request_url, "GET")
-print group
 
+print json.dumps(group, sort_keys=True, indent=4)
