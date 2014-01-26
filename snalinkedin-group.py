@@ -10,9 +10,19 @@
 # install oauth2 by downloading the package and launching python setup.py install
 # From here: https://github.com/PrincessPolymath/python-oauth2
 #
+# Group API here: http://developer.linkedin.com/documents/groups-api
+#
 
 import oauth2 as oauth
 import urlparse 
+import networkx as nx
+import json
+import os
+
+# Clear screen
+os.system('cls' if os.name=='nt' else 'clear')
+
+graph=nx.DiGraph()
 
 # Get them from https://www.linkedin.com/secure/developer
 OAUTH_TOKEN = "Insert here"
@@ -21,11 +31,11 @@ CONSUMER_KEY = "Insert here"
 CONSUMER_SECRET = "Insert here"
 
 
-## Code from: http://developer.linkedin.com/documents/getting-oauth-token-python
+# Code from: http://developer.linkedin.com/documents/getting-oauth-token-python
 consumer = oauth.Consumer(CONSUMER_KEY, CONSUMER_SECRET)
 client = oauth.Client(consumer)
 
-request_token_url      = 'https://api.linkedin.com/uas/oauth/requestToken'
+request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken'
 resp, content = client.request(request_token_url, "POST")
 if resp['status'] != '200':
     raise Exception("Invalid response %s." % resp['status'])
@@ -37,7 +47,7 @@ print "    - oauth_token        = %s" % request_token['oauth_token']
 print "    - oauth_token_secret = %s" % request_token['oauth_token_secret']
 print
 
-authorize_url =      'https://api.linkedin.com/uas/oauth/authorize'
+authorize_url = 'https://api.linkedin.com/uas/oauth/authorize'
 print "Go to the following link in your browser:"
 print "%s?oauth_token=%s" % (authorize_url, request_token['oauth_token'])
 print 
@@ -64,7 +74,8 @@ print
 
 # Here start my code
 
-request_url      = 'http://api.linkedin.com/v1/groups/89815:(id,name,site-group-url,posts:(id,summary,creator))'
+# Get info about the FabLab Interest Group group
+request_url = 'http://api.linkedin.com/v1/groups/89815:(id,name,site-group-url,posts:(id,summary,creator))'
 group = client.request(request_url, "GET")
 print group
 
