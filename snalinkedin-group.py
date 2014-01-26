@@ -80,4 +80,18 @@ print
 request_url = 'http://api.linkedin.com/v1/groups/89815:(id,name,site-group-url,posts:(id,summary,creator))?format=json'
 group = client.request(request_url, "GET")
 
-print json.dumps(group, sort_keys=True, indent=4)
+#print json.dumps(group, sort_keys=True, indent=4)
+
+# Get info about the FabLab Interest Group group
+request_url = 'http://api.linkedin.com/v1/groups/89815/posts:(creation-timestamp,title,summary,creator:(first-name,last-name,picture-url,headline),likes,attachment:(image-url,content-domain,content-url,title,summary),relation-to-viewer)?format=json&category=discussion&order=recency&modified-since=1302727083000&count=5'
+group = client.request(request_url, "GET")
+
+#print json.dumps(group, sort_keys=True, indent=4)
+
+# Convert the value from string to json to dict
+a = group[1].rstrip('\n')
+content = json.loads(a)
+
+print content["_start"]
+print content["_total"]
+print content["values"]
