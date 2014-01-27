@@ -31,6 +31,8 @@ CONSUMER_KEY = "Insert here"
 CONSUMER_SECRET = "Insert here"
 
 
+
+
 # Code from: http://developer.linkedin.com/documents/getting-oauth-token-python
 consumer = oauth.Consumer(CONSUMER_KEY, CONSUMER_SECRET)
 client = oauth.Client(consumer)
@@ -83,7 +85,7 @@ group = client.request(request_url, "GET")
 #print json.dumps(group, sort_keys=True, indent=4)
 
 # Get info about the FabLab Interest Group group
-request_url = 'http://api.linkedin.com/v1/groups/89815/posts:(creation-timestamp,title,summary,creator:(first-name,last-name,picture-url,headline),likes,attachment:(image-url,content-domain,content-url,title,summary),relation-to-viewer)?format=json&category=discussion&order=recency&start=0&count=5'
+request_url = 'http://api.linkedin.com/v1/groups/89815/posts:(id,creation-timestamp,title,summary,creator:(first-name,last-name,picture-url,headline),likes,attachment:(image-url,content-domain,content-url,title,summary),relation-to-viewer)?format=json&category=discussion&order=recency&start=0&count=5'
 group = client.request(request_url, "GET")
 
 # Convert the value from string to json to dict
@@ -98,7 +100,15 @@ print json.dumps(content["values"], sort_keys=True, indent=4)
 
 for i in content["values"]:
 	print ""
+	print i["id"]
 	print "Post by",i["creator"]["firstName"],i["creator"]["lastName"]
 	print "Comments..."
-	for k in i["likes"]["values"]:
-		print "-",k["person"]["firstName"], k["person"]["lastName"]
+	if i["likes"]["_total"] != 0:
+		for k in i["likes"]["values"]:
+			print "-",k["person"]["firstName"], k["person"]["lastName"]
+		
+	request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?count=5&start=0" % (i["id"])
+	comments = "t"
+	#comments = client.request(request_url, "GET")
+	print comments
+	type(comments)
