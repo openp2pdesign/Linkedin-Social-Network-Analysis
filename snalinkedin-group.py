@@ -97,40 +97,47 @@ group = client.request(request_url, "GET")
 a = group[1].rstrip('\n')
 content = json.loads(a)
 
-print content["_total"]
+for m in range(int(content["_total"] / 5)+1):
+	request_url = 'http://api.linkedin.com/v1/groups/%s/posts:(id,creation-timestamp,title,summary,creator:(first-name,last-name,picture-url,headline),likes,attachment:(image-url,content-domain,content-url,title,summary),relation-to-viewer)?format=json&category=discussion&order=recency&start=%s&count=5' % (groupcode, m*5)
+	group = client.request(request_url, "GET")
 
-# Debug
-#print json.dumps(content["values"], sort_keys=True, indent=4)
+	# Convert the value from string to json to dict
+	a = group[1].rstrip('\n')
+	content = json.loads(a)
 
-# Read likes of each post
-if content["_total"] != 0:
-	for i in content["values"]:
-		print ""
-		print i["id"]
-		name_author = i["creator"]["firstName"]+" "+i["creator"]["lastName"]
-		print "Post by", name_author
-		print "Likes..."
-		if i["likes"]["_total"] != 0:
-			for k in i["likes"]["values"]:
-				print "-",k["person"]["firstName"], k["person"]["lastName"]
-				name_like = k["person"]["firstName"]+" "+k["person"]["lastName"]
-				graph.add_edge(name_like,name_author)
+	# Debug
+	#print json.dumps(content["values"], sort_keys=True, indent=4)
+
+	# Read likes of each post
+	if "_total" in content.keys() and "values" in content.keys() and content["_total"] != 0:
+		for i in content["values"]:
+			print ""
+			print i["id"]
+			if "creator" in i.keys() and len(i["creator"]) != 0:
+				name_author = i["creator"]["firstName"]+" "+i["creator"]["lastName"]
+				print "Post by", name_author
+				if i["likes"]["_total"] != 0:
+					print "Likes..."
+					for k in i["likes"]["values"]:
+						print "-",k["person"]["firstName"], k["person"]["lastName"]
+						name_like = k["person"]["firstName"]+" "+k["person"]["lastName"]
+						graph.add_edge(name_like,name_author)
 		
-		# Read comments of each post
-		request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?format=json" % (i["id"])
-		# &count=5&start=0 For pagination
-		# Convert the value from string to json to dict
-		comments = client.request(request_url, "GET")
-		b = comments[1].rstrip('\n')
-		contentcomments = json.loads(b)
-		if contentcomments["_total"] != 0:
-			print "Comments..."
-			for k in contentcomments["values"]:
-				name_comment = k["creator"]["firstName"]+" "+k["creator"]["lastName"]
-				print "-",name_comment
-				graph.add_edge(name_comment,name_author)
+				# Read comments of each post
+				comment_request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?format=json" % (i["id"])
+				# &count=5&start=0 For pagination
+				# Convert the value from string to json to dict
+				comments = client.request(comment_request_url, "GET")
+				b = comments[1].rstrip('\n')
+				contentcomments = json.loads(b)
+				if "_total" in contentcomments.keys() and contentcomments["_total"] != 0:
+					print "Comments..."
+					for k in contentcomments["values"]:
+						name_comment = k["creator"]["firstName"]+" "+k["creator"]["lastName"]
+						print "-",name_comment
+						graph.add_edge(name_comment,name_author)
 				
-				# TODO: an edge with previous commenters
+						# TODO: an edge with previous commenters
 				
 				
 # Save graph
@@ -138,4 +145,4 @@ print ""
 print "The group discussion was analyzed succesfully."
 print ""
 print "Saving the file as "+groupcode+groupname+"-linkedin-group-discussion.gexf..."
-#nx.write_gexf(graph, groupcode+groupname+"-linkedin-group-discussion.gexf")
+nx.write_gexf(graph, groupcode+groupname+"-linkedin-group-discussion.gexf")
