@@ -102,13 +102,16 @@ for i in content["values"]:
 	print ""
 	print i["id"]
 	print "Post by",i["creator"]["firstName"],i["creator"]["lastName"]
-	print "Comments..."
+	print "Likes..."
 	if i["likes"]["_total"] != 0:
 		for k in i["likes"]["values"]:
 			print "-",k["person"]["firstName"], k["person"]["lastName"]
 		
-	request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?count=5&start=0" % (i["id"])
-	comments = "t"
-	#comments = client.request(request_url, "GET")
-	print comments
-	type(comments)
+	request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?format=json&count=5&start=0" % (i["id"])
+	comments = client.request(request_url, "GET")
+	b = comments[1].rstrip('\n')
+	contentcomments = json.loads(b)
+	if contentcomments["_total"] != 0:
+		print "Comments..."
+		for k in contentcomments["values"]:
+			print "-",k["creator"]["firstName"], k["creator"]["lastName"]
