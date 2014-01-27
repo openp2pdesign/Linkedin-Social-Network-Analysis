@@ -32,7 +32,6 @@ CONSUMER_SECRET = "Insert here"
 
 
 
-
 # Code from: http://developer.linkedin.com/documents/getting-oauth-token-python
 consumer = oauth.Consumer(CONSUMER_KEY, CONSUMER_SECRET)
 client = oauth.Client(consumer)
@@ -78,40 +77,65 @@ print
 '''
 # Here start my code
 
-# Get info about the FabLab Interest Group group
-request_url = 'http://api.linkedin.com/v1/groups/89815:(id,name,site-group-url,posts:(id,summary,creator))?format=json'
+# Here set the group id. You can get it from its url: http://www.linkedin.com/groups/FabLab-Interest-Group-89815?gid=89815
+groupcode = "89815"
+
+# Get info about the group
+request_url = "http://api.linkedin.com/v1/groups/%s:(id,name,site-group-url)?format=json" % (groupcode)
 group = client.request(request_url, "GET")
 
-#print json.dumps(group, sort_keys=True, indent=4)
+# Convert the value from string to json to dict
+a = group[1].rstrip('\n')
+content = json.loads(a)
+groupname = content["name"]
 
-# Get info about the FabLab Interest Group group
-request_url = 'http://api.linkedin.com/v1/groups/89815/posts:(id,creation-timestamp,title,summary,creator:(first-name,last-name,picture-url,headline),likes,attachment:(image-url,content-domain,content-url,title,summary),relation-to-viewer)?format=json&category=discussion&order=recency&start=0&count=5'
+# Get info about the posts in the group
+request_url = 'http://api.linkedin.com/v1/groups/%s/posts:(id,creation-timestamp,title,summary,creator:(first-name,last-name,picture-url,headline),likes,attachment:(image-url,content-domain,content-url,title,summary),relation-to-viewer)?format=json&category=discussion&order=recency&start=0&count=5' % (groupcode)
 group = client.request(request_url, "GET")
 
 # Convert the value from string to json to dict
 a = group[1].rstrip('\n')
 content = json.loads(a)
 
-print content["_start"]
 print content["_total"]
-print content["values"]
 
-print json.dumps(content["values"], sort_keys=True, indent=4)
+# Debug
+#print json.dumps(content["values"], sort_keys=True, indent=4)
 
-for i in content["values"]:
-	print ""
-	print i["id"]
-	print "Post by",i["creator"]["firstName"],i["creator"]["lastName"]
-	print "Likes..."
-	if i["likes"]["_total"] != 0:
-		for k in i["likes"]["values"]:
-			print "-",k["person"]["firstName"], k["person"]["lastName"]
+# Read likes of each post
+if content["_total"] != 0:
+	for i in content["values"]:
+		print ""
+		print i["id"]
+		name_author = i["creator"]["firstName"]+" "+i["creator"]["lastName"]
+		print "Post by", name_author
+		print "Likes..."
+		if i["likes"]["_total"] != 0:
+			for k in i["likes"]["values"]:
+				print "-",k["person"]["firstName"], k["person"]["lastName"]
+				name_like = k["person"]["firstName"]+" "+k["person"]["lastName"]
+				graph.add_edge(name_like,name_author)
 		
-	request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?format=json&count=5&start=0" % (i["id"])
-	comments = client.request(request_url, "GET")
-	b = comments[1].rstrip('\n')
-	contentcomments = json.loads(b)
-	if contentcomments["_total"] != 0:
-		print "Comments..."
-		for k in contentcomments["values"]:
-			print "-",k["creator"]["firstName"], k["creator"]["lastName"]
+		# Read comments of each post
+		request_url ="http://api.linkedin.com/v1/posts/%s/comments:(creator:(first-name,last-name,picture-url),creation-timestamp,text)?format=json" % (i["id"])
+		# &count=5&start=0 For pagination
+		# Convert the value from string to json to dict
+		comments = client.request(request_url, "GET")
+		b = comments[1].rstrip('\n')
+		contentcomments = json.loads(b)
+		if contentcomments["_total"] != 0:
+			print "Comments..."
+			for k in contentcomments["values"]:
+				name_comment = k["creator"]["firstName"]+" "+k["creator"]["lastName"]
+				print "-",name_comment
+				graph.add_edge(name_comment,name_author)
+				
+				# TODO: an edge with previous commenters
+				
+				
+# Save graph
+print ""
+print "The group discussion was analyzed succesfully."
+print ""
+print "Saving the file as "+groupcode+groupname+"-linkedin-group-discussion.gexf..."
+#nx.write_gexf(graph, groupcode+groupname+"-linkedin-group-discussion.gexf")
